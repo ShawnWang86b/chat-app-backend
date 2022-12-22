@@ -1,1 +1,5 @@
-# chat-app-backend
+### chat-app-backend
+
+####tech
+nodemon
+mongoose

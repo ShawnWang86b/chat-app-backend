@@ -53,6 +53,8 @@ const authUser = asyncHandler(async (req, res) => {
       token: generateToken(user._id),
     });
   } else {
+    //code 401 Unauthorized
+    //the client request has not been completed because it lacks valid authentication credentials for the requested resource
     res.status(401);
     throw new Error("Invalid Email or Password");
   }

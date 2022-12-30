@@ -10,6 +10,7 @@ const accessChat = asyncHandler(async (req, res) => {
   }
   let isChat = await Chat.find({
     isGroupChat: false,
+    //TODO: not quite understand the two and sentences mean?
     $and: [
       { users: { $elemMatch: { $eq: req.user._id } } },
       { users: { $elemMatch: { $eq: userId } } },
@@ -27,6 +28,7 @@ const accessChat = asyncHandler(async (req, res) => {
     res.send(isChat[0]);
   } else {
     const chatData = {
+      //TODO: why initial the chatName as sender
       chatName: "sender",
       isGroupChat: false,
       users: [req.user._id, userId],
@@ -50,4 +52,62 @@ const accessChat = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { accessChat };
+const fetchChats = asyncHandler(async (req, res) => {
+  try {
+    Chat.find({
+      users: { $elemMatch: { $eq: req.user._id } },
+    })
+      .populate("users", "-password")
+      .populate("latestMessage")
+      .populate("groupAdmin", "-password")
+      .sort({ updatedAt: -1 })
+      //TODO: why write this style, and what is the path mean?
+      .then(async (results) => {
+        results = await User.populate(results, {
+          path: "latestMessage.sender",
+          select: "name avatar email",
+        });
+        res.status(200).send(results);
+      });
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+});
+
+const createGroupChat = asyncHandler(async (req, res) => {
+  //TODO: what are the users and name mean?
+  if (!req.body.users || !req.body.name) {
+    return res.status(400).send({ message: "Please fill all the fields" });
+  }
+
+  let users = JSON.parse(req.body.users);
+
+  //one person can't open a group chat
+  if (users.length < 2) {
+    return res.status(400).send({ message: "Two more users are required" });
+  }
+
+  users.push(req.user);
+
+  try {
+    const groupChat = await Chat.create({
+      //TODO: why this is req.body.name
+      chatName: req.body.name,
+      users: users,
+      isGroupChat: true,
+      groupAdmin: req.user,
+    });
+    // Can't use create.populate(), so created Chat firstly and find it by _id
+    const fullGroupChat = await Chat.findOne({ _id: groupChat._id })
+      .populate("users", "-password")
+      .populate("groupAdmin", "-password");
+
+    res.status(200).json(fullGroupChat);
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+});
+
+module.exports = { accessChat, fetchChats, createGroupChat };

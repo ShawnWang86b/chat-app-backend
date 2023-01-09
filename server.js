@@ -14,6 +14,17 @@ connectDB();
 const app = express();
 
 app.use(express.json());
+
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "https://chat-app-frontend-2plb.onrender.com",
+    ],
+    credentials: true, //access-control-allow-credentials:true
+    optionSuccessStatus: 200,
+  })
+);
 app.get("/", (req, res) => {
   res.send("API is Running Successfully");
 });
@@ -37,14 +48,7 @@ app.use("/api/message", messageRoutes);
 //   });
 // }
 //----
-app.use(
-  cors({
-    origin: [
-      "http://localhost:3000",
-      "https://chat-app-frontend-2plb.onrender.com",
-    ],
-  })
-);
+
 app.use(notFound);
 app.use(errorHandler);
 

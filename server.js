@@ -9,22 +9,15 @@ const messageRoutes = require("./routes/messageRoutes");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 const path = require("path");
 const cors = require("cors");
+const corsOptions = require("./config/corsOptions");
 require("dotenv").config();
 connectDB();
 const app = express();
 
 app.use(express.json());
 
-app.use(
-  cors({
-    origin: [
-      "http://localhost:3000",
-      "https://chat-app-frontend-2plb.onrender.com",
-    ],
-    credentials: true, //access-control-allow-credentials:true
-    optionSuccessStatus: 200,
-  })
-);
+app.use(cors(corsOptions));
+
 app.get("/", (req, res) => {
   res.send("API is Running Successfully");
 });
@@ -35,19 +28,6 @@ app.use("/api/message", messageRoutes);
 
 //deployment
 // const __dirname1 = path.resolve();
-
-// if (process.env.NODE_ENV === "production") {
-//   app.use(express.static(path.join(__dirname1, "/frontend/build")));
-
-//   app.get("*", (req, res) =>
-//     res.sendFile(path.resolve(__dirname1, "frontend", "build", "index.html"))
-//   );
-// } else {
-//   app.get("/", (req, res) => {
-//     res.send("API is running..");
-//   });
-// }
-//----
 
 app.use(notFound);
 app.use(errorHandler);
@@ -63,8 +43,8 @@ const io = require("socket.io")(server, {
   pingTimeout: 60000,
   cors: {
     origin: [
-      "http://localhost:3000",
-      "https://chat-app-frontend-2plb.onrender.com",
+      //"http://localhost:3000",
+      "https://shawns-chat-app-frontend.onrender.com",
     ],
     // credentials: true,
   },

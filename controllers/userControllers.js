@@ -1,6 +1,11 @@
 const asyncHandler = require("express-async-handler");
-const generateToken = require("../config/generateToken");
-const User = require("../src/models/userModel");
+const {
+  generateRegisterToken,
+  generateResetPwdToken,
+} = require("../config/generateToken");
+var nodemailer = require("nodemailer");
+const User = require("../models/userModel");
+const jwt = require("jsonwebtoken");
 
 //user register
 const registerUser = asyncHandler(async (req, res) => {
@@ -30,7 +35,7 @@ const registerUser = asyncHandler(async (req, res) => {
       name: user.name,
       email: user.email,
       avatar: user.avatar,
-      token: generateToken(user._id),
+      token: generateRegisterToken(user._id),
     });
   } else {
     res.status(400);
@@ -50,7 +55,7 @@ const authUser = asyncHandler(async (req, res) => {
       name: user.name,
       email: user.email,
       avatar: user.avatar,
-      token: generateToken(user._id),
+      token: generateRegisterToken(user._id),
     });
   } else {
     //code 401 Unauthorized
@@ -75,4 +80,45 @@ const allUsers = asyncHandler(async (req, res) => {
   });
   res.send(users);
 });
-module.exports = { registerUser, authUser, allUsers };
+
+// /api/user/forgot-password
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  const userInfo = await User.findOne({ email });
+  if (!userInfo) {
+    res.status(400);
+    throw new Error("User not exists");
+  }
+
+  //create a secret, related to this user
+  const secret = process.env.JWT_SECRET + userInfo.password;
+  console.log("secret", secret);
+  //generate a token
+  const token = generateResetPwdToken(userInfo.email, userInfo._id, secret);
+  console.log("token", token);
+
+  const link = `http://localhost:5000/api/user/forgot-password/${userInfo._id}/${token}`;
+  console.log("link", link);
+});
+
+const resetPassword = asyncHandler(async (req, res) => {
+  //get id and token from the url
+  const { id, token } = req.params;
+  const userInfo = User.findOne({ _id: id });
+  if (!userInfo) {
+    res.status(400);
+    throw new Error("User not exists");
+  }
+  const secret = process.env.JWT_SECRET + userInfo.password;
+
+  const verify = jwt.verify(token, secret);
+  console.log("verify", verify);
+});
+
+module.exports = {
+  registerUser,
+  authUser,
+  allUsers,
+  forgotPassword,
+  resetPassword,
+};

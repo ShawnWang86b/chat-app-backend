@@ -3,6 +3,8 @@ const {
   registerUser,
   authUser,
   allUsers,
+  forgotPassword,
+  resetPassword,
 } = require("../controllers/userControllers");
 const { protect } = require("../middleware/authMiddleware");
 const router = express.Router();
@@ -12,5 +14,6 @@ router.route("/login").post(authUser);
 //can write in this way, if their router same:
 // router.route("/").post(registerUser).get(allUsers)
 router.route("/").get(protect, allUsers);
-
+router.route("/forget-password").post(forgotPassword);
+router.route("/reset-password/:id/:token").get(resetPassword);
 module.exports = router;

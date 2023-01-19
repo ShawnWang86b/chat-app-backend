@@ -1,8 +1,14 @@
 const jwt = require("jsonwebtoken");
 
-const generateRegisterToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: "30d",
+const generateRegisterAccessToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_ACCESS_TOKEN_SECRET, {
+    expiresIn: "15m",
+  });
+};
+
+const generateRegisterRefreshToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_REFRESH_TOKEN_SECRET, {
+    expiresIn: "7d",
   });
 };
 
@@ -13,4 +19,8 @@ const generateResetPwdToken = (email, id, secret) => {
   });
 };
 
-module.exports = { generateRegisterToken, generateResetPwdToken };
+module.exports = {
+  generateRegisterAccessToken,
+  generateRegisterRefreshToken,
+  generateResetPwdToken,
+};

@@ -1,13 +1,34 @@
 const asyncHandler = require("express-async-handler");
 const {
-  generateRegisterToken,
+  generateRegisterAccessToken,
+  generateRegisterRefreshToken,
   generateResetPwdToken,
 } = require("../config/generateToken");
 var nodemailer = require("nodemailer");
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const { userInfo } = require("os");
+const { OAuth2Client, GoogleAuth } = require("google-auth-library");
+
+//Google login
+// const googleLogin = asyncHandler(async (req, res) => {
+//   const googleToken = req.body.google_token;
+//   const client = new OAuth2Client(
+//     "183399659179-8lecl04i1iiijq2tovp18h3rqn3kl4cd.apps.googleusercontent.com",
+//     "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"
+//   );
+//   //to get id token
+//   const googleAuth = new GoogleAuth()
+//   const client_For_ID_Token = await googleAuth.getClient();
+
+//   const ticket = await client.verifyIdToken({
+//     idToken: googleToken,
+//     audience:
+//       "183399659179-8lecl04i1iiijq2tovp18h3rqn3kl4cd.apps.googleusercontent.com",
+//   });
+//   const payload = ticket.getPayload();
+//   console.log(payload);
+// });
 //user register
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, avatar } = req.body;
@@ -19,7 +40,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const userExists = await User.findOne({ email });
   if (userExists) {
-    res.status(400);
+    res.status(409);
     throw new Error("User already exist");
   }
 
@@ -48,22 +69,37 @@ const registerUser = asyncHandler(async (req, res) => {
 const authUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
-
-  if (user && (await user.matchPassword(password))) {
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      avatar: user.avatar,
-      token: generateRegisterToken(user._id),
-    });
-  } else {
-    //code 401 Unauthorized
-    //the client request has not been completed because it lacks valid authentication credentials for the requested resource
-    res.status(401);
-    throw new Error("Invalid Email or Password");
+  if (!email || !password) {
+    return res.status(400).json({ message: "All fields are required" });
   }
+
+  //code 401 Unauthorized
+  //the client request has not been completed because it lacks valid authentication credentials for the requested resource
+  const user = await User.findOne({ email });
+  if (!user || !user.isActive) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const match = await bcrypt.compare(password, user.password);
+  if (!match) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  accessToken = generateRegisterAccessToken(user._id);
+  //Create secure cookie with refresh
+  res.cookie("jwt", generateRegisterRefreshToken(user._id), {
+    httpOnly: true, //accessible only by web server
+    //secure: true, //https, will added when deployed
+    sameSite: "None", //cross-site cookie
+    maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
+  });
+
+  res.json({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    avatar: user.avatar,
+    token: accessToken,
+  });
 });
 // /api/user?search=shawn
 const allUsers = asyncHandler(async (req, res) => {
@@ -197,6 +233,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
+  //googleLogin,
   registerUser,
   authUser,
   allUsers,

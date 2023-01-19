@@ -13,6 +13,7 @@ const userSchema = mongoose.Schema(
       default:
         "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
     },
+    isActive: { type: Boolean, default: true },
   },
   {
     timestamps: true,
@@ -20,9 +21,10 @@ const userSchema = mongoose.Schema(
 );
 
 // check password
-userSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
+// userSchema.methods.matchPassword = async function (enteredPassword) {
+//   return await bcrypt.compare(enteredPassword, this.password);
+// };
+
 // add salt
 userSchema.pre("save", async function (next) {
   if (!this.isModified) {

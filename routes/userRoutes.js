@@ -1,26 +1,8 @@
 const express = require("express");
-const {
-  registerUser,
-  authUser,
-  allUsers,
-  forgotPassword,
-  resetPasswordLink,
-  resetPassword,
-  //googleLogin,
-} = require("../controllers/userControllers");
-const { protect } = require("../middleware/authMiddleware");
+const { allUsers } = require("../controllers/userControllers");
+const { verifyJWT } = require("../middleware/authMiddleware");
 const router = express.Router();
 
-router.route("/").post(registerUser);
-//router.route("/google-login").post(googleLogin);
-router.route("/login").post(authUser);
-//can write in this way, if their router same:
-// router.route("/").post(registerUser).get(allUsers)
-router.route("/").get(protect, allUsers);
-router.route("/forget-password").post(forgotPassword);
-router
-  .route("/reset-password/:id/:token")
-  .get(resetPasswordLink)
-  .put(resetPassword);
+router.route("/").get(verifyJWT, allUsers);
 
 module.exports = router;

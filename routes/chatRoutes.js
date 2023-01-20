@@ -1,4 +1,4 @@
-const { protect } = require("../middleware/authMiddleware");
+const { verifyJWT } = require("../middleware/authMiddleware");
 const {
   accessChat,
   fetchChats,
@@ -10,12 +10,13 @@ const {
 const express = require("express");
 const router = express.Router();
 
-router.route("/").post(protect, accessChat);
+router.use(verifyJWT);
+router.route("/").post(accessChat);
 //fetch all of the chat for particular user
-router.route("/").get(protect, fetchChats);
-router.route("/group").post(protect, createGroupChat);
-router.route("/rename").put(protect, renameGroup);
-router.route("/groupadd").put(protect, addToGroup);
-router.route("/groupremove").put(protect, removeFromGroup);
+router.route("/").get(fetchChats);
+router.route("/group").post(createGroupChat);
+router.route("/rename").put(renameGroup);
+router.route("/groupadd").put(addToGroup);
+router.route("/groupremove").put(removeFromGroup);
 
 module.exports = router;

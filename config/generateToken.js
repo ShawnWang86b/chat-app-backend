@@ -15,7 +15,7 @@ const generateRegisterRefreshToken = (id) => {
 //don't forget to pass secret, because secret may change in different scenario
 const generateResetPwdToken = (email, id, secret) => {
   return jwt.sign({ email, id }, secret, {
-    expiresIn: "30d",
+    expiresIn: "5m",
   });
 };
 

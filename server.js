@@ -1,4 +1,7 @@
+require("dotenv").config();
 const express = require("express");
+const app = express();
+const path = require("path");
 const connectDB = require("./config/db");
 const colors = require("colors");
 const authRoutes = require("./routes/authRoutes");
@@ -7,16 +10,14 @@ const chatRoutes = require("./routes/chatRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 const cookieParser = require("cookie-parser");
-const path = require("path");
 const cors = require("cors");
 const corsOptions = require("./config/corsOptions");
-require("dotenv").config();
-connectDB();
-const app = express();
+const PORT = process.env.PORT || 5000;
 
-app.use(express.json());
+connectDB();
 
 app.use(cors(corsOptions));
+app.use(express.json());
 
 app.use(cookieParser());
 
@@ -29,13 +30,10 @@ app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);
 
-//deployment
-// const __dirname1 = path.resolve();
-
 app.use(notFound);
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+console.log(process.env.NODE_ENV.red.bold);
 const server = app.listen(
   PORT,
   console.log(`server starts on the port ${PORT}`.yellow.bold)

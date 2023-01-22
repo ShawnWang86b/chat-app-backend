@@ -13,6 +13,7 @@ const userSchema = mongoose.Schema(
       default:
         "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
     },
+    // role:[{type:String, default:"Normal"}],
     isActive: { type: Boolean, default: true },
   },
   {

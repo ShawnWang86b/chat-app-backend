@@ -21,19 +21,31 @@ app.use(express.json());
 
 app.use(cookieParser());
 
-app.get("/", (req, res) => {
-  res.send("API is Running Successfully");
-});
+//it’s safer to use the absolute path of the directory that you want to serve
+app.use("/", express.static(path.join(__dirname, "public")));
 
+app.use("/", require("./routes/root"));
+
+console.log(process.env.NODE_ENV.red.bold);
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);
 
+// '*' represents all
+app.all("*", (req, res) => {
+  res.status(404);
+  if (req.accepts("html")) {
+    res.sendFile(path.join(__dirname, "views", "404.html"));
+  } else if (req.accepts("json")) {
+    res.json({ message: "404 Not Found" });
+  } else {
+    res.type("txt").send("404 Not Found");
+  }
+});
 app.use(notFound);
 app.use(errorHandler);
 
-console.log(process.env.NODE_ENV.red.bold);
 const server = app.listen(
   PORT,
   console.log(`server starts on the port ${PORT}`.yellow.bold)
